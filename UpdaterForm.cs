@@ -84,25 +84,21 @@ namespace Updater
             btn_yes.Visible = false;
             btn_no.Visible = false;
             prog_DownloadBar.Visible = true;
-            Process[] processes = Process.GetProcessesByName("NucleusCoop");
+            //Process[] processes = Process.GetProcessesByName("NucleusCoop");
 
-            foreach (Process NucleusCoop in processes)
-            {
-                NucleusCoop.Kill();
-            }
+            //foreach (Process NucleusCoop in processes)
+            //{
+            //    NucleusCoop.Kill();
+            //}
         }
 
         private void DownloadReleaseZip()
         {
             DeleteTemp();
-
-            if (!Directory.Exists(Path.Combine(destinationPath, @"Temp")))
-            {
+            try
+            {            
                 Directory.CreateDirectory((Path.Combine(destinationPath, @"Temp")));
-            }
 
-            if (Directory.Exists(Path.Combine(destinationPath, @"Temp")))///Will download and extract in the previously created "Temp" folder.
-            {
                 using (webClient = new WebClient())
                 {
                     webClient.DownloadProgressChanged += wc_DownloadProgressChanged;
@@ -113,6 +109,8 @@ namespace Updater
                     webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(webClient_DownloadFileCompleted);
                 }
             }
+            catch
+            { }
         }
 
         private void webClient_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
@@ -167,7 +165,7 @@ namespace Updater
                         continue;
                     }
 
-                    if (File.Exists(update))//check if it's a file and not a folder path
+                    try
                     {
                         string[] fileName = update.Split('\\');
                         int index = fileName.Length - 1;
@@ -213,21 +211,26 @@ namespace Updater
                             }
                         }
 
-                        //check if the update zip contains new files
-                        if (!newFilesCheck.Contains(updatefileName))
+                        try
                         {
-                            string newFilePath = destinationPath + update.Substring(update.IndexOf("\\Temp") + 5);//build destination path(install root + new file path) 
-                            string filePathNoFileName = newFilePath.Remove(newFilePath.IndexOf(updatefileName));//remove file name from path(keep folder path only in order to create the new required folders)
-
-                            if (!Directory.Exists(filePathNoFileName))
+                            //check if the update zip contains new files
+                            if (!newFilesCheck.Contains(updatefileName))
                             {
-                                Directory.CreateDirectory(filePathNoFileName);
+                                string newFilePath = destinationPath + update.Substring(update.IndexOf("\\Temp") + 5);//build destination path(install root + new file path) 
+                                string filePathNoFileName = newFilePath.Remove(newFilePath.IndexOf(updatefileName));//remove file name from path(keep folder path only in order to create the new required folders)
+                                Console.WriteLine(newFilePath);
+                                Directory.CreateDirectory(filePathNoFileName);                               
+                                File.Copy(update, newFilePath, true);
                             }
-
-                            Console.WriteLine(newFilePath);
-                            File.Copy(update, newFilePath, true);
                         }
+                        catch 
+                        { }
+
                         count++;
+                    }
+                    catch
+                    {
+                      
                     }
 
                 }
@@ -351,10 +354,12 @@ namespace Updater
                 return;
             }
 
-            if(Directory.Exists(Path.Combine(destinationPath, @"Temp")))
+            try 
             { 
                 Directory.Delete(Path.Combine(destinationPath, @"Temp"), true);
             }
+            catch 
+            { }
         }
 
         private void Updater_FormClosing(object sender, FormClosingEventArgs e)

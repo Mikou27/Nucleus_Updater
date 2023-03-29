@@ -40,13 +40,13 @@ namespace Updater
             }
             else///No update available
             {
-                if (!installerMode)
-                {
-                    Process[] processes = Process.GetProcessesByName("NucleusCoop");
+                //if (!installerMode)
+                //{
+                //    Process[] processes = Process.GetProcessesByName("NucleusCoop");
 
-                    if (processes.Length == 0)
-                        MessageBox.Show("No Updated available", "Nucleus Co-op", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                //    if (processes.Length == 0)
+                //        MessageBox.Show("No Updated available", "Nucleus Co-op", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //}
 
                 return string.Empty;
             }
@@ -55,23 +55,27 @@ namespace Updater
 
         private static string GetVersion()
         {
-            if (!File.Exists(Application.StartupPath + "\\NucleusCoop.exe"))//If used as installer. 
-            {
-                installerMode = true;
-                modeText = $@"Start Nucleus Co-op {releaseTag} Download?";
-                return string.Empty;
-            }
+            //if (!File.Exists(Application.StartupPath + "\\NucleusCoop.exe"))//If used as installer. 
+            //{
+            //    installerMode = true;
+            //    modeText = $@"Start Nucleus Co-op {releaseTag} Download?";
+            //    return string.Empty;
+            //}
 
-            if (File.Exists(Path.Combine(Application.StartupPath, $"readme.txt")))
-            {
+            try { 
+
                 StreamReader content = new StreamReader(Path.Combine(Application.StartupPath, $"readme.txt"));
 
                 string[] text = content.ReadLine().Split(' ');
                 version = text[text.Length - 1];
                 content.Dispose();
-            }       
+            }
+            catch 
+            {
+                installerMode = true;
+                modeText = $@"Start Nucleus Co-op {releaseTag} Download?";}
 
-            return version;
-        }
+                return version;
+           }
     }
 }
