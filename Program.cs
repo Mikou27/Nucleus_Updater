@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace Updater
@@ -8,11 +10,16 @@ namespace Updater
         [STAThread]
         static void Main()
         {
-            if (VersionCheck.CheckAppUpdate() == string.Empty)
+            if (Process.GetProcessesByName("Updater").Length > 1)
             {
                 return;
             }
 
+            if (VersionCheck.CheckAppUpdate() == string.Empty)
+            {
+                return;
+            }
+         
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Updater(VersionCheck.CheckAppUpdate()));

@@ -15,72 +15,32 @@ namespace Updater
     {
         private string version;
         private WebClient webClient;
-        public static string destinationPath;
+        public static string destinationPath = Application.StartupPath;
+        private bool finished = false;
 
         public Updater(string newVersion)
         {
             InitializeComponent();
             version = newVersion;
-            text1.Text = VersionCheck.modeText;
-            text1.Location = new Point(Width / 2 - text1.Width / 2, text1.Location.Y);
+            label.Text = VersionCheck.modeText;
+            label.Location = new Point(Width / 2 - label.Width / 2, label.Location.Y);
             TopMost = true;  
-        }
-
-        private static string DestinationPathDialog()
-        {
-            using (FolderBrowserDialog fbd = new FolderBrowserDialog())
-            {
-                fbd.Description = "Select installation folder, remember to add it to your antivirus exceptions list before the installation.";
-
-                DialogResult result = fbd.ShowDialog();
-
-
-                bool problematic = fbd.SelectedPath.Contains(@"C:\Program Files\") ||
-                                    fbd.SelectedPath.Contains(@"C:\Program Files (x86)\") ||
-                                    fbd.SelectedPath.Contains(@"C:\Users\") ||
-                                    fbd.SelectedPath.Contains(@"C:\Windows\");
-
-
-
-                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath) && !problematic)
-                {
-                    return fbd.SelectedPath;
-                }
-
-                return string.Empty;
-            }
         }
 
         private void btn_yes_MouseClick(object sender, MouseEventArgs e)
         {
-            if (VersionCheck.installerMode)
+            if (finished)
             {
-                destinationPath = DestinationPathDialog();
-
-                if (destinationPath == string.Empty)
+                Invoke(new Action(delegate
                 {
-                    string message = "Nucleus Co-op should not be installed here.\n\n" +
-                                        "Do NOT install in any of these folders:\n" +
-                                        "- A folder containing any game files\n" +
-                                        "- C:\\Program Files or C:\\Program Files (x86)\n" +
-                                        "- C:\\Users (including Documents, Desktop, or Downloads)\n" +
-                                        "- Any folder with security settings like C:\\Windows\n" +
-                                        "\n" +
-                                        "A good place is C:\\NucleusCo-op\\NucleusCoop.exe";
+                    Close();
+                }));
 
-
-                    MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    destinationPath = DestinationPathDialog();
-                    return;
-                }
-            }
-            else
-            {
-                destinationPath = Application.StartupPath;
+                return;
             }
 
             DownloadReleaseZip();
-            text1.Visible = false;
+
             btn_yes.Visible = false;
             btn_no.Visible = false;
             prog_DownloadBar.Visible = true;
@@ -121,11 +81,11 @@ namespace Updater
             {
                 Invoke(new Action(delegate
                 {
-                    label.Text = "Extract and install Nucleus";
-                    label.Location = new Point((prog_DownloadBar.Location.X + (prog_DownloadBar.Width / 2)) - label.Width / 2, label.Location.Y);
-                    prog_DownloadBar.Maximum = 30;
-                }));
+                    prog_DownloadBar.Value = 0;
+                    label.Text = $"Extract and install Nucleus {version}";
+                    label.Location = new Point(Width / 2 - label.Width / 2, label.Location.Y);
 
+                }));
 
                 bool isValidZip = ZipFile.CheckZip(Path.Combine(destinationPath, @"Temp\NucleusApp.zip"));
                 if (isValidZip)
@@ -138,10 +98,8 @@ namespace Updater
                 }
                 else
                 {
-                    MessageBox.Show("Zip file doesn't exist", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Zip file doesn't exist or is corrupted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-
-                Invoke(new Action(delegate { prog_DownloadBar.Value = 10; }));
 
                 List<string> currentFiles = new List<string>(Directory.GetFileSystemEntries(destinationPath, "*", SearchOption.AllDirectories));
                 List<string> updateFiles = new List<string>(Directory.GetFileSystemEntries(Path.Combine(destinationPath, @"Temp"), "*", SearchOption.AllDirectories));
@@ -154,8 +112,6 @@ namespace Updater
                     int index = fileName.Length - 1;
                     currentFilesNames.Add(fileName[index]);
                 }
-
-                Invoke(new Action(delegate { prog_DownloadBar.Value = 20; }));
 
                 int count = 0;
                 List<string> newFilesCheck = new List<string>();
@@ -209,7 +165,6 @@ namespace Updater
                                         continue;
                                     }
                                 }
-
                             }
                         }
 
@@ -230,21 +185,22 @@ namespace Updater
                         count++;
                     }
 
-                }
+                    Invoke(new Action(delegate { prog_DownloadBar.Value = (count*100)/updateFiles.Count; }));
+                }              
 
-                Invoke(new Action(delegate { prog_DownloadBar.Value = 30; }));
-
-                DeleteTemp();
-
-                DialogResult dialogResult = MessageBox.Show("Installation completed!", "All done!", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                if (dialogResult == DialogResult.OK)
+                Invoke(new Action(delegate
                 {
-                    Process.Start(destinationPath);
-                    Invoke(new Action(delegate
-                    {
-                        Close();
-                    }));
-                }
+                    DeleteTemp();
+                    prog_DownloadBar.Dispose();
+                    finished = true;
+
+                    btn_yes.Visible = true;
+                    btn_yes.Text = "Exit";
+                    btn_yes.Location = new Point(Width / 2 - btn_yes.Width / 2, Height / 2 - btn_yes.Height / 2);
+
+                    label.Text = "Installation conpleted!";
+                    label.Location = new Point(Width / 2 - label.Width / 2, label.Location.Y);
+                }));
             });
         }
 
@@ -351,9 +307,18 @@ namespace Updater
                 return;
             }
 
-            if(Directory.Exists(Path.Combine(destinationPath, @"Temp")))
-            { 
+            try
+            {
+                if (webClient != null)
+                {
+                    webClient.CancelAsync();
+                }
+
                 Directory.Delete(Path.Combine(destinationPath, @"Temp"), true);
+            }
+            catch /*(Exception ex)*/
+            {
+                //MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

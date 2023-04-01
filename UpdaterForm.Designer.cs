@@ -34,7 +34,6 @@ namespace Updater
             this.btn_yes = new System.Windows.Forms.Button();
             this.prog_DownloadBar = new System.Windows.Forms.ProgressBar();
             this.btn_no = new System.Windows.Forms.Button();
-            this.text1 = new System.Windows.Forms.Label();
             this.label_changelog = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
@@ -91,17 +90,6 @@ namespace Updater
             this.btn_no.UseVisualStyleBackColor = false;
             this.btn_no.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btn_no_MouseClick);
             // 
-            // text1
-            // 
-            this.text1.AutoSize = true;
-            this.text1.BackColor = System.Drawing.Color.Transparent;
-            this.text1.ForeColor = System.Drawing.Color.White;
-            this.text1.Location = new System.Drawing.Point(35, 5);
-            this.text1.Name = "text1";
-            this.text1.Size = new System.Drawing.Size(0, 13);
-            this.text1.TabIndex = 4;
-            this.text1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // label_changelog
             // 
             this.label_changelog.AutoSize = true;
@@ -124,7 +112,6 @@ namespace Updater
             this.ClientSize = new System.Drawing.Size(267, 80);
             this.Controls.Add(this.label_changelog);
             this.Controls.Add(this.btn_no);
-            this.Controls.Add(this.text1);
             this.Controls.Add(this.label);
             this.Controls.Add(this.btn_yes);
             this.Controls.Add(this.prog_DownloadBar);
@@ -135,7 +122,7 @@ namespace Updater
             this.MinimumSize = new System.Drawing.Size(283, 107);
             this.Name = "Updater";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Nucleus  Updater";
+            this.Text = "Nucleus Updater";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Updater_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -148,7 +135,6 @@ namespace Updater
         private System.Windows.Forms.Button btn_yes;
         private System.Windows.Forms.ProgressBar prog_DownloadBar;
         private System.Windows.Forms.Button btn_no;
-        private System.Windows.Forms.Label text1;
         private System.Windows.Forms.Label label_changelog;
     }
 }

@@ -45,7 +45,7 @@ namespace Updater
                     Process[] processes = Process.GetProcessesByName("NucleusCoop");
 
                     if (processes.Length == 0)
-                        MessageBox.Show("No Updated available", "Nucleus Co-op", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("No Update available", "Nucleus Co-op", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 return string.Empty;
@@ -55,13 +55,6 @@ namespace Updater
 
         private static string GetVersion()
         {
-            if (!File.Exists(Application.StartupPath + "\\NucleusCoop.exe"))//If used as installer. 
-            {
-                installerMode = true;
-                modeText = $@"Start Nucleus Co-op {releaseTag} Download?";
-                return string.Empty;
-            }
-
             if (File.Exists(Path.Combine(Application.StartupPath, $"readme.txt")))
             {
                 StreamReader content = new StreamReader(Path.Combine(Application.StartupPath, $"readme.txt"));
@@ -69,9 +62,14 @@ namespace Updater
                 string[] text = content.ReadLine().Split(' ');
                 version = text[text.Length - 1];
                 content.Dispose();
-            }       
-
-            return version;
+                return version;
+            }
+            else
+            {
+                installerMode = true;
+                modeText = $@"Start Nucleus Co-op {releaseTag} Download?";
+                return string.Empty;
+            }         
         }
     }
 }
