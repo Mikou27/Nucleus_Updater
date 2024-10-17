@@ -16,6 +16,8 @@ namespace Updater
         private string version;
         private WebClient webClient;
         public static string destinationPath = Application.StartupPath;
+        public static string tempDir = Path.Combine(destinationPath, @"Pending");
+
         private bool finished = false;
 
         public Updater(string newVersion)
@@ -24,10 +26,10 @@ namespace Updater
             version = newVersion;
             label.Text = VersionCheck.modeText;
             label.Location = new Point(Width / 2 - label.Width / 2, label.Location.Y);
-            TopMost = true;  
+            TopMost = true;
         }
 
-        private void btn_yes_MouseClick(object sender, MouseEventArgs e)
+        private void Btn_yes_MouseClick(object sender, MouseEventArgs e)
         {
             if (finished)
             {
@@ -39,11 +41,13 @@ namespace Updater
                 return;
             }
 
-            DownloadReleaseZip();
+            DownloadReleaseZip();//A decommenter
+            //WebClient_DownloadFileCompleted(null, null);//A supprimer
 
             btn_yes.Visible = false;
             btn_no.Visible = false;
             prog_DownloadBar.Visible = true;
+
             Process[] processes = Process.GetProcessesByName("NucleusCoop");
 
             foreach (Process NucleusCoop in processes)
@@ -56,30 +60,30 @@ namespace Updater
         {
             DeleteTemp();
 
-            if (!Directory.Exists(Path.Combine(destinationPath, @"Temp")))
+            if (!Directory.Exists(tempDir))
             {
-                Directory.CreateDirectory((Path.Combine(destinationPath, @"Temp")));
+                Directory.CreateDirectory(tempDir);
             }
 
-            if (Directory.Exists(Path.Combine(destinationPath, @"Temp")))///Will download and extract in the previously created "Temp" folder.
+            if (Directory.Exists(tempDir))///Will download and extract in the previously created "Pending" folder.
             {
                 using (webClient = new WebClient())
                 {
-                    webClient.DownloadProgressChanged += wc_DownloadProgressChanged;
+                    webClient.DownloadProgressChanged += Wc_DownloadProgressChanged;
                     webClient.DownloadFileAsync(
                     //new System.Uri($@"https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
-                     new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
-                    Path.Combine(destinationPath, @"Temp\\NucleusApp.zip"));
-                    webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(webClient_DownloadFileCompleted);
+                    new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
+                    Path.Combine(tempDir, @"NucleusApp.zip"));
+                    webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(WebClient_DownloadFileCompleted);
                 }
             }
         }
 
-        private void webClient_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+        private void WebClient_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
             System.Threading.Tasks.Task.Run(() =>
             {
-                Invoke(new Action(delegate
+                Invoke(new Action(delegate ///A decommenter
                 {
                     prog_DownloadBar.Value = 0;
                     label.Text = $"Extract and install Nucleus {version}";
@@ -87,12 +91,13 @@ namespace Updater
 
                 }));
 
-                bool isValidZip = ZipFile.CheckZip(Path.Combine(destinationPath, @"Temp\NucleusApp.zip"));
+                bool isValidZip = ZipFile.CheckZip(Path.Combine(tempDir, @"NucleusApp.zip"));
+
                 if (isValidZip)
                 {
-                    ZipFile zip = new ZipFile(Path.Combine(destinationPath, @"Temp\NucleusApp.zip"));
+                    ZipFile zip = new ZipFile(Path.Combine(tempDir, @"NucleusApp.zip"));
                     zip.Password = "nucleus";
-                    zip.ExtractAll(Path.Combine(destinationPath, @"Temp"));
+                    zip.ExtractAll(tempDir);
                     zip.ExtractExistingFile = ExtractExistingFileAction.OverwriteSilently;
                     zip.Dispose();
                 }
@@ -102,9 +107,10 @@ namespace Updater
                 }
 
                 List<string> currentFiles = new List<string>(Directory.GetFileSystemEntries(destinationPath, "*", SearchOption.AllDirectories));
-                List<string> updateFiles = new List<string>(Directory.GetFileSystemEntries(Path.Combine(destinationPath, @"Temp"), "*", SearchOption.AllDirectories));
+                List<string> updateFiles = new List<string>(Directory.GetFileSystemEntries(tempDir, "*", SearchOption.AllDirectories));
 
                 List<string> currentFilesNames = new List<string>();
+
 
                 foreach (string current in currentFiles)
                 {
@@ -118,7 +124,7 @@ namespace Updater
 
                 foreach (string update in updateFiles)
                 {
-                    if (update.Contains("NucleusApp.zip"))
+                    if (update.Contains("NucleusApp.zip") || update.Contains("Updater.exe"))
                     {
                         continue;
                     }
@@ -129,19 +135,22 @@ namespace Updater
                         int index = fileName.Length - 1;
                         string updatefileName = fileName[index];
 
+                        string updatefileNameNoRoot = update.Replace($"{tempDir}\\", null);
+
                         for (int i = 0; i < currentFiles.Count; i++)
                         {
-                            if (currentFiles[i].Contains("Temp") || currentFiles[i].Contains("content") ||
+                            if (currentFiles[i].Contains("Pending") || currentFiles[i].Contains("content") ||
                                 currentFiles[i].Contains("debug-log.txt") || currentFiles[i].Contains("theme") ||
-                                currentFiles[i].Contains("Updater.exe") || currentFiles[i].Contains("games profiles"))
+                                currentFiles[i].Contains("Updater.exe") || currentFiles[i].Contains("game profiles") || currentFiles[i].Contains("handlers"))
                             {
                                 continue;
                             }
 
-                            string currentFileName = currentFilesNames[i];
+                            string currentFileName = currentFiles[i].Replace($"{destinationPath}\\", null);
 
-                            newFilesCheck.Add(currentFileName);//clean paths list(no "Temp"/"content")
-                            if (updatefileName == currentFileName)
+                            newFilesCheck.Add(currentFileName);//clean paths list(no Pending/content etc)
+
+                            if (updatefileNameNoRoot == currentFileName)
                             {
                                 if (currentFileName == "Settings.ini")
                                 {
@@ -149,29 +158,25 @@ namespace Updater
                                     continue;
                                 }
 
-                                byte[] toCompareUpdate = File.ReadAllBytes(update);
-                                byte[] toCompareCurrent = File.ReadAllBytes(currentFiles[i]);
-
-                                if (toCompareUpdate.Length != toCompareCurrent.Length || update.Contains("readme.txt"))//Force readme.txt update if the length of the new one is equal.
+                                try
                                 {
-                                    try
-                                    {
-                                        File.Delete(currentFiles[i]);
-                                        File.Copy(update, currentFiles[i], true);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        MessageBox.Show(string.Format("{0}: {1}", ex.ToString(), ex.Message) + " \n " + update + "\n " + currentFiles[i], "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                        continue;
-                                    }
+                                    File.Delete(currentFiles[i]);
+                                    File.Copy(update, currentFiles[i], true);
+
+                                    File.SetLastWriteTime(currentFiles[i], DateTime.Now);
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show(string.Format("{0}: {1}", ex.ToString(), ex.Message) + " \n " + update + "\n " + currentFiles[i], "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    continue;
                                 }
                             }
                         }
 
                         //check if the update zip contains new files
-                        if (!newFilesCheck.Contains(updatefileName))
+                        if (!newFilesCheck.Contains(updatefileNameNoRoot))
                         {
-                            string newFilePath = destinationPath + update.Substring(update.IndexOf("\\Temp") + 5);//build destination path(install root + new file path) 
+                            string newFilePath = destinationPath + update.Substring(update.IndexOf("\\Pending") + 8);//build destination path(install root + new file path) 
                             string filePathNoFileName = newFilePath.Remove(newFilePath.IndexOf(updatefileName));//remove file name from path(keep folder path only in order to create the new required folders)
 
                             if (!Directory.Exists(filePathNoFileName))
@@ -179,14 +184,14 @@ namespace Updater
                                 Directory.CreateDirectory(filePathNoFileName);
                             }
 
-                            Console.WriteLine(newFilePath);
                             File.Copy(update, newFilePath, true);
                         }
+
                         count++;
                     }
 
-                    Invoke(new Action(delegate { prog_DownloadBar.Value = (count*100)/updateFiles.Count; }));
-                }              
+                    Invoke(new Action(delegate { prog_DownloadBar.Value = (count * 100) / updateFiles.Count; }));
+                }
 
                 Invoke(new Action(delegate
                 {
@@ -198,7 +203,7 @@ namespace Updater
                     btn_yes.Text = "Exit";
                     btn_yes.Location = new Point(Width / 2 - btn_yes.Width / 2, Height / 2 - btn_yes.Height / 2);
 
-                    label.Text = "Installation conpleted!";
+                    label.Text = "Installation completed!";
                     label.Location = new Point(Width / 2 - label.Width / 2, label.Location.Y);
                 }));
             });
@@ -287,14 +292,14 @@ namespace Updater
             // File.WriteAllLines(Path.Combine(destinationPath, @"test.ini"), finalIniContent);
         }
 
-        private void wc_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        private void Wc_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
             prog_DownloadBar.Value = e.ProgressPercentage;
             label.Text = e.ProgressPercentage + "%";
             label.Location = new Point((prog_DownloadBar.Location.X + (prog_DownloadBar.Width / 2)) - label.Width / 2, label.Location.Y);
         }
 
-        private void btn_no_MouseClick(object sender, MouseEventArgs e)
+        private void Btn_no_MouseClick(object sender, MouseEventArgs e)
         {
             DeleteTemp();
             Close();
@@ -309,12 +314,9 @@ namespace Updater
 
             try
             {
-                if (webClient != null)
-                {
-                    webClient.CancelAsync();
-                }
-
-                Directory.Delete(Path.Combine(destinationPath, @"Temp"), true);
+                webClient?.CancelAsync();  
+                if(Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);//A decommenter
             }
             catch /*(Exception ex)*/
             {
@@ -327,7 +329,7 @@ namespace Updater
             DeleteTemp();
         }
 
-        private void label_changelog_Click(object sender, EventArgs e)
+        private void Label_changelog_Click(object sender, EventArgs e)
         {
             Process.Start($@"https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/tag/{version}");
         }

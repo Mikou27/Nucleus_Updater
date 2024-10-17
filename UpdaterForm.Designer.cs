@@ -63,7 +63,7 @@ namespace Updater
             this.btn_yes.TabIndex = 1;
             this.btn_yes.Text = "Yes";
             this.btn_yes.UseVisualStyleBackColor = false;
-            this.btn_yes.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btn_yes_MouseClick);
+            this.btn_yes.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Btn_yes_MouseClick);
             // 
             // prog_DownloadBar
             // 
@@ -88,7 +88,7 @@ namespace Updater
             this.btn_no.TabIndex = 3;
             this.btn_no.Text = "No";
             this.btn_no.UseVisualStyleBackColor = false;
-            this.btn_no.MouseClick += new System.Windows.Forms.MouseEventHandler(this.btn_no_MouseClick);
+            this.btn_no.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Btn_no_MouseClick);
             // 
             // label_changelog
             // 
@@ -101,7 +101,7 @@ namespace Updater
             this.label_changelog.Size = new System.Drawing.Size(49, 12);
             this.label_changelog.TabIndex = 5;
             this.label_changelog.Text = "Changelog";
-            this.label_changelog.Click += new System.EventHandler(this.label_changelog_Click);
+            this.label_changelog.Click += new System.EventHandler(this.Label_changelog_Click);
             // 
             // Updater
             // 

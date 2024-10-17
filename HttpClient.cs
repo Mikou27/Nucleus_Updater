@@ -28,7 +28,7 @@ namespace Updater
             catch (WebException ex)
             {
                 //MessageBox.Show(string.Format("{0}: {1}", ex.ToString(), ex.Message), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                MessageBox.Show("Unable to check for new version", "No valid Github response", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //MessageBox.Show("Unable to check for new version", "No valid Github response", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return null;
             }
         }
