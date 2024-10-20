@@ -31,28 +31,36 @@ namespace Updater
 
         private void Btn_yes_MouseClick(object sender, MouseEventArgs e)
         {
-            if (finished)
+            try
             {
-                Invoke(new Action(delegate
+                if (finished)
                 {
-                    Close();
-                }));
+                    Invoke(new Action(delegate
+                    {
+                        Close();
+                    }));
 
-                return;
+                    return;
+                }
+
+                DownloadReleaseZip();//A decommenter
+                //WebClient_DownloadFileCompleted(null, null);//A supprimer
+
+                btn_yes.Visible = false;
+                btn_no.Visible = false;
+                prog_DownloadBar.Visible = true;
+
+                Process[] processes = Process.GetProcessesByName("NucleusCoop");
+
+                foreach (Process NucleusCoop in processes)
+                {
+                    NucleusCoop.Kill();
+                }
             }
-
-            DownloadReleaseZip();//A decommenter
-            //WebClient_DownloadFileCompleted(null, null);//A supprimer
-
-            btn_yes.Visible = false;
-            btn_no.Visible = false;
-            prog_DownloadBar.Visible = true;
-
-            Process[] processes = Process.GetProcessesByName("NucleusCoop");
-
-            foreach (Process NucleusCoop in processes)
+            catch (Exception ex)
             {
-                NucleusCoop.Kill();
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
             }
         }
 
@@ -71,8 +79,8 @@ namespace Updater
                 {
                     webClient.DownloadProgressChanged += Wc_DownloadProgressChanged;
                     webClient.DownloadFileAsync(
-                    //new System.Uri($@"https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
-                    new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
+                    new System.Uri($@"https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
+                    //new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
                     Path.Combine(tempDir, @"NucleusApp.zip"));
                     webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(WebClient_DownloadFileCompleted);
                 }
@@ -111,7 +119,6 @@ namespace Updater
 
                 List<string> currentFilesNames = new List<string>();
 
-
                 foreach (string current in currentFiles)
                 {
                     string[] fileName = current.Split('\\');
@@ -129,7 +136,7 @@ namespace Updater
                         continue;
                     }
 
-                    if (File.Exists(update))//check if it's a file and not a folder path
+                    if (File.Exists(update))//check if it's a file and not a directory
                     {
                         string[] fileName = update.Split('\\');
                         int index = fileName.Length - 1;
