@@ -80,7 +80,7 @@ namespace Updater
                     webClient.DownloadProgressChanged += Wc_DownloadProgressChanged;
                     webClient.DownloadFileAsync(
                     new System.Uri($@"https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
-                    //new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),
+                    //new System.Uri($@"https://github.com/Mikou27/splitscreenme-nucleus/releases/download/{version}/NucleusApp.zip"),//custom url for testing purpose
                     Path.Combine(tempDir, @"NucleusApp.zip"));
                     webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(WebClient_DownloadFileCompleted);
                 }

@@ -9,7 +9,7 @@ namespace Updater
     {
         private static int version = -1;
         private static string gitApi = "https://api.github.com/repos/SplitScreen-Me/splitscreenme-nucleus/";
-        //private static string gitApi = "https://api.github.com/repos/Mikou27/splitscreenme-nucleus/";
+        //private static string gitApi = "https://api.github.com/repos/Mikou27/splitscreenme-nucleus/";//custom url for testing purpose
         public static bool installerMode = false;
         public static string modeText;
         private static string releaseTag;
